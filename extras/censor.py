@@ -57,4 +57,4 @@ class Censor:
         return checked_images
 
 
-default_censor = None
+default_censor = Censor().censor

@@ -59,7 +59,7 @@ class AsyncTask:
         self.disable_preview = args.pop()
         self.disable_intermediate_results = args.pop()
         self.disable_seed_increment = args.pop()
-        self.black_out_nsfw = args.pop()
+        self.black_out_nsfw = False
         self.adm_scaler_positive = args.pop()
         self.adm_scaler_negative = args.pop()
         self.adm_scaler_end = args.pop()

@@ -24,10 +24,145 @@ from modules.ui_gradio_extensions import reload_javascript
 from modules.auth import auth_enabled, check_auth
 from modules.util import is_json
 
-def get_task(*args):
-    args = list(args)
-    args.pop(0)
-
+def get_task(currentTask, generate_image_grid, prompt, negative_prompt, style_selections,
+             performance_selection, aspect_ratios_selection, image_number, output_format, image_seed,
+             read_wildcards_in_order, sharpness, guidance_scale, base_model, refiner_model, refiner_switch,
+             *remaining_args):
+    # Extrair lora_ctrls (assumindo 5 LoRAs, 15 argumentos)
+    lora_ctrls = remaining_args[:15]
+    remaining_args = remaining_args[15:]
+    
+    # Extrair argumentos até black_out_nsfw
+    input_image_checkbox, current_tab, uov_method, uov_input_image, outpaint_selections, \
+    inpaint_input_image, inpaint_additional_prompt, inpaint_mask_image, disable_preview, \
+    disable_intermediate_results, disable_seed_increment, black_out_nsfw = remaining_args[:12]
+    remaining_args = remaining_args[12:]
+    
+    # Extrair argumentos até save_metadata_to_images
+    adm_scaler_positive, adm_scaler_negative, adm_scaler_end, adaptive_cfg, clip_skip, \
+    sampler_name, scheduler_name, vae_name, overwrite_step, overwrite_switch, overwrite_width, \
+    overwrite_height, overwrite_vary_strength, overwrite_upscale_strength, \
+    mixing_image_prompt_and_vary_upscale, mixing_image_prompt_and_inpaint, \
+    debugging_cn_preprocessor, skipping_cn_preprocessor, canny_low_threshold, \
+    canny_high_threshold, refiner_swap_method, controlnet_softness = remaining_args[:22]
+    remaining_args = remaining_args[22:]
+    
+    # freeu_ctrls (5 argumentos)
+    freeu_enabled, freeu_b1, freeu_b2, freeu_s1, freeu_s2 = remaining_args[:5]
+    remaining_args = remaining_args[5:]
+    
+    # inpaint_ctrls (8 argumentos)
+    debugging_inpaint_preprocessor, inpaint_disable_initial_latent, inpaint_engine, \
+    inpaint_strength, inpaint_respective_field, inpaint_advanced_masking_checkbox, \
+    invert_mask_checkbox, inpaint_erode_or_dilate = remaining_args[:8]
+    remaining_args = remaining_args[8:]
+    
+    # save_final_enhanced_image_only (se presente)
+    if not args_manager.args.disable_image_log:
+        save_final_enhanced_image_only = remaining_args[0]
+        remaining_args = remaining_args[1:]
+    else:
+        save_final_enhanced_image_only = False
+    
+    # save_metadata_to_images e metadata_scheme (se presente)
+    if not args_manager.args.disable_metadata:
+        save_metadata_to_images = remaining_args[0]
+        metadata_scheme = remaining_args[1]
+        remaining_args = remaining_args[2:]
+    else:
+        save_metadata_to_images = False
+        metadata_scheme = 'fooocus'  # Valor padrão
+    
+    # ip_ctrls (16 argumentos, assumindo 4 imagens)
+    ip_ctrls = remaining_args[:16]
+    remaining_args = remaining_args[16:]
+    
+    # Argumentos finais
+    debugging_dino, dino_erode_or_dilate, debugging_enhance_masks_checkbox, \
+    enhance_input_image, enhance_checkbox, enhance_uov_method, enhance_uov_processing_order, \
+    enhance_uov_prompt_type = remaining_args[:8]
+    enhance_ctrls = remaining_args[8:]
+    
+    # Montar a lista de argumentos na ordem correta
+    args = [
+        prompt,
+        negative_prompt,
+        style_selections,
+        performance_selection,
+        aspect_ratios_selection,
+        image_number,
+        output_format,
+        image_seed,
+        read_wildcards_in_order,
+        sharpness,
+        guidance_scale,
+        base_model,
+        refiner_model,
+        refiner_switch,
+        *lora_ctrls,  # 15 argumentos
+        input_image_checkbox,
+        current_tab,
+        uov_method,
+        uov_input_image,
+        outpaint_selections,
+        inpaint_input_image,
+        inpaint_additional_prompt,
+        inpaint_mask_image,
+        disable_preview,
+        disable_intermediate_results,
+        disable_seed_increment,
+        black_out_nsfw,  # False para desativar censura
+        adm_scaler_positive,
+        adm_scaler_negative,
+        adm_scaler_end,
+        adaptive_cfg,
+        clip_skip,
+        sampler_name,
+        scheduler_name,
+        vae_name,
+        overwrite_step,
+        overwrite_switch,
+        overwrite_width,
+        overwrite_height,
+        overwrite_vary_strength,
+        overwrite_upscale_strength,
+        mixing_image_prompt_and_vary_upscale,
+        mixing_image_prompt_and_inpaint,
+        debugging_cn_preprocessor,
+        skipping_cn_preprocessor,
+        canny_low_threshold,
+        canny_high_threshold,
+        refiner_swap_method,
+        controlnet_softness,
+        freeu_enabled,
+        freeu_b1,
+        freeu_b2,
+        freeu_s1,
+        freeu_s2,
+        debugging_inpaint_preprocessor,
+        inpaint_disable_initial_latent,
+        inpaint_engine,
+        inpaint_strength,
+        inpaint_respective_field,
+        inpaint_advanced_masking_checkbox,
+        invert_mask_checkbox,
+        inpaint_erode_or_dilate,
+        save_final_enhanced_image_only,
+        save_metadata_to_images,
+        metadata_scheme,  # "fooocus" ou "a1111"
+        *ip_ctrls,  # 16 argumentos
+        debugging_dino,
+        dino_erode_or_dilate,
+        debugging_enhance_masks_checkbox,
+        enhance_input_image,
+        enhance_checkbox,
+        enhance_uov_method,
+        enhance_uov_processing_order,
+        enhance_uov_prompt_type,
+        *enhance_ctrls  # 64 argumentos
+    ]
+    
+    print(f"Arguments for AsyncTask: {args}")
     return worker.AsyncTask(args=args)
 
 def generate_clicked(task: worker.AsyncTask):

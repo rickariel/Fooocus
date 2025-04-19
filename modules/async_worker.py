@@ -31,7 +31,11 @@ class AsyncTask:
         self.negative_prompt = args.pop()
         self.style_selections = args.pop()
 
-        self.performance_selection = Performance(args.pop())
+        try:
+            self.performance_selection = Performance(args.pop())
+        except ValueError:
+            print(f"Invalid Performance value, using default: {Performance.QUALITY}")
+            self.performance_selection = Performance.QUALITY  # Valor padrão
         self.steps = self.performance_selection.steps()
         self.original_steps = self.steps
 
@@ -59,7 +63,7 @@ class AsyncTask:
         self.disable_preview = args.pop()
         self.disable_intermediate_results = args.pop()
         self.disable_seed_increment = args.pop()
-        self.black_out_nsfw = False
+        self.black_out_nsfw = False  # Forçado como False para desativar censura
         self.adm_scaler_positive = args.pop()
         self.adm_scaler_negative = args.pop()
         self.adm_scaler_end = args.pop()
@@ -97,8 +101,11 @@ class AsyncTask:
         self.inpaint_erode_or_dilate = args.pop()
         self.save_final_enhanced_image_only = args.pop() if not args_manager.args.disable_image_log else False
         self.save_metadata_to_images = args.pop() if not args_manager.args.disable_metadata else False
-        self.metadata_scheme = MetadataScheme(
-            args.pop()) if not args_manager.args.disable_metadata else MetadataScheme.FOOOCUS
+        try:
+            self.metadata_scheme = MetadataScheme(args.pop()) if not args_manager.args.disable_metadata else MetadataScheme.FOOOCUS
+        except ValueError:
+            print(f"Invalid MetadataScheme value, using default: {MetadataScheme.FOOOCUS}")
+            self.metadata_scheme = MetadataScheme.FOOOCUS  # Valor padrão
 
         self.cn_tasks = {x: [] for x in ip_list}
         for _ in range(modules.config.default_controlnet_image_count):
